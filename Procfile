@@ -1,0 +1,1 @@
+web: vendor/bin/heroku-php-nginx -C nginx/conf.d/app.conf -F php/local.ini public

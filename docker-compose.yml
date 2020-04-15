@@ -1,0 +1,61 @@
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: digitalocean.com/php
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+       - ./:/var/www
+       - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+       - ./../../localPackages/:/localPackages/
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./:/var/www/
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ./../../localPackages/:/localPackages/
+    networks:
+      - app-network
+
+  #PgSQL Service
+  pgsql:
+    image: postgres:latest
+    container_name: pgsql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=laravel
+      - POSTGRES_PASSWORD=laravel
+      - POSTGRES_DB=laravel
+    volumes:
+      - ~/.docker/upagos/postgres:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
